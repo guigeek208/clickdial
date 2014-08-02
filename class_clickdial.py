@@ -13,7 +13,7 @@ class ClickDial:
             print "init ClickDial"
         self.vboxlogin= vboxlogin
         #self.URL = None
-        self.HOST = '10.254.99.2'
+        self.HOST = None
         self.URL2 = '/webdialer/services/WebdialerSoapService?wsdl'
         self.PWD = None
         self.UID = None
@@ -308,12 +308,13 @@ class ClickDial:
              </cred>
              <prof xsi:type="urn:UserProfile">
                 <user xsi:type="xsd:string">%s</user>
+                <deviceName xsi:type="xsd:string">%s</deviceName>
                 <supportEM xsi:type="xsd:boolean">%s</supportEM>
                 <locale xsi:type="xsd:string"></locale>
              </prof>
           </urn:endCallSoap>
        </soapenv:Body>
-    </soapenv:Envelope>""" % (self.UID,self.PWD,self.UID,self.MOBILITY)
+    </soapenv:Envelope>""" % (self.UID,self.PWD,self.UID,self.DEVICE,self.MOBILITY)
         result_xml=self._SOAP_post("https://"+self.HOST+self.URL2,in_xml)
         doc=xml.dom.minidom.parseString(result_xml)
         #print result_xml
@@ -364,135 +365,3 @@ class ClickDial:
         else:
             self.CONNECTED = 0
             return False
-    
-    # DEPRECATED NOT USED
-    def log_on(self):
-        print "login"
-        self.CONNECTED = 0
-        self.DEVICES = []
-        self.LINES = []
-        url = 'https://' + self.HOST + '/webdialer/Webdialer'
-        headers = {"Content-type": "application/x-www-form-urlencoded",
-             "Connection": "keep-alive",
-                 "Accept": "text/plain"}
-        param = {'sub' : 'false' ,
-                'cmd' : 'doAuth' ,
-                'destination' : '' ,
-                 'loc' : 'loc' ,
-                'red' : '' ,
-                'uid' : self.UID ,
-                'pwd' : self.PWD ,
-                'submitBtn' : 'Submit',
-        }
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
-        login_data = urllib.urlencode(param)
-        setdefaulttimeout(5)
-        try: 
-            opener.open(url, login_data)
-        except:
-            msgBox = QtGui.QMessageBox.warning(self.vboxlogin, "ClickDial",
-                                "Erreur impossible de joindre le webdialer",
-                                QtGui.QMessageBox.Ok);
-            return False
-        resp = opener.open(url)
-        page = resp.read(200000)
-        #print page
-
-        ### Device
-        m = re.search('<TITLE>.*</TITLE>', page)
-        if (m == None):
-            self.CONNECTED = 0
-            return False
-
-        if (m.group(0) == "<TITLE>Cisco WebDialer - Passer un appel</TITLE>"):
-            self.CONNECTED = 1
-        else:
-            self.CONNECTED = 0
-            return False
-
-        #print page
-        regex = re.compile("<input type=\"hidden\" name=\"uid\" .*>", re.DOTALL)
-        r = regex.search(page)
-        if (r):
-            words = r.group(0).split('"');
-            if ( words[5] == self.UID):
-                self.CONNECTED = 1
-            else:
-                self.CONNECTED = 0
-
-        pattern = re.compile('onChange=.*</SELECT></TD>', re.DOTALL)
-        result = pattern.search(page)
-        words = result.group(0).split('"');
-        i = 3
-        while(i < len(words)):
-            self.DEVICES.append(words[i])
-            i = i + 2            
-        ### Line
-        if (len(self.DEVICES) == 1):
-            self.DEVICE = self.DEVICES[0]
-        pattern = re.compile('<SELECT name=\"lineNumber\" id=\"lineNumber\".*</SELECT>', re.DOTALL)
-        result = pattern.search(page)
-        print result.group(0)
-        words = result.group(0).split('"');
-        self.LINES.append(words[9])
-        if (len(self.LINES) == 1):
-            self.LINE = self.LINES[0]
-        return True
-
-    # DEPRECATED NOT USED
-    def start_call(self, dn, anonymous):
-        regex = re.compile("(\d)(\d+)")
-        r = regex.match(dn)
-        if (r):    
-            prefix = r.group(1)
-            num = r.group(2)
-        if (anonymous):
-            dn = prefix+"3651"+num
-        url = 'https://' + self.HOST + '/webdialer/Webdialer'
-        headers = {"Content-type": "application/x-www-form-urlencoded",
-             "Connection": "keep-alive",
-                 "Accept": "text/plain"}
-        param = {'cmd' : 'doMakeCall' ,
-         'sub' : 'false' ,
-         'from' : 'doMakeCall' ,
-          'loc' : 'fr_FR' ,
-         'red' : '' ,
-         'lang' : 'fr_FR' ,
-         'uid' : self.UID,
-         'deviceMode' : 'permanent',
-         'destination' : dn,
-         'dial' : '    Composer    ',
-         'permDeviceSelect' : self.DEVICE,
-         'lineNumber' : self.LINE ,
-         'noConfDialog' : 'false',
-         'noAutoClose' : 'false',
-         'supportEM' : 'true',
-         'dispLang' : 'English',
-        }
-        print self.DEVICE
-        print self.LINE
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
-        data = urllib.urlencode(param)
-        request = urllib2.Request(url, data, headers)
-        reponse = opener.open(url, data)
-        page = reponse.read(200000)
-        print page
-
-    # DEPRECATED NOT USED
-    def stop_call(self):
-        url = 'https://' + self.HOST + '/webdialer/Webdialer'
-        headers = {"Content-type": "application/x-www-form-urlencoded",
-             "Connection": "keep-alive",
-                 "Accept": "text/plain"}
-        param = {'cmd' : 'doEndCall' ,
-         'sub' : 'false' ,
-  #       'destination' : self.entry.get_text() ,
-         'red' : '' ,
-         'from' : 'doEndCall' ,
-         'hangup' : '    Raccrocher    ' ,
-        }
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
-        data = urllib.urlencode(param)
-        request = urllib2.Request(url, data, headers)
-        reponse = opener.open(url, data)
-        page = reponse.read(200000)
