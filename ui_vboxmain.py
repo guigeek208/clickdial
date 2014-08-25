@@ -91,8 +91,8 @@ class Ui_VBoxMain(QtGui.QWidget):
 						regex = re.compile("\d(\d+)")
 						r = regex.match(num)
 						if (r):
-							if (r.group(1) != ''):				
-								self.list_contacts_ents_num.append(r.group(1))
+							if (r.group(1) != ''):	
+								self.list_contacts_ents_num.append(num)
 								self.list_contacts_ents_name.append(name)
 								QtGui.QTreeWidgetItem(self.treeList_directoryents, [name, num])
 		return True

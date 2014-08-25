@@ -98,8 +98,8 @@ setup(
               },
 
     zipfile = None,
-    console = [GUI2Exe_Target_1],
-    windows = [],
+    console = [],
+    windows = [GUI2Exe_Target_1],
     service = [],
     com_server = [],
     ctypes_com_server = []

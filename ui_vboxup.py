@@ -146,8 +146,9 @@ class Ui_VBoxUp(QtGui.QWidget):
 		#	bool = True
 		#else:
 		#	bool = False
-		self.click._makeCall(dn, False)
-		self.add_history(dn)
+		newdn =  re.sub(r"\D", "", str(dn))
+		self.click._makeCall(newdn, False)
+		self.add_history(newdn)
 		
 	def event_clicked_pickup_anonymous(self):
 		dn = self.lineEditPrefix.text() + self.lineEdit.text()
